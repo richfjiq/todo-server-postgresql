@@ -53,13 +53,26 @@ app.post('/todos', async (req: Request, res: Response) => {
 app.put('/todos/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
   const { user_email, title, progress, date } = req.body as Task;
-  // 'UPDATE users SET name = $1, email = $2 WHERE id = $3',
+
   try {
     const editTodo = await pool.query(
       'UPDATE todos SET user_email = $1, title = $2, progress = $3, date = $4 WHERE id = $5',
       [user_email, title, progress, date, id]
     );
     res.status(200).json(editTodo);
+  } catch (error) {
+    console.error(error);
+  }
+});
+
+app.delete('/todos/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const deleteTodo = await pool.query('DELETE FROM todos WHERE id = $1', [
+      id,
+    ]);
+    res.status(200).json(deleteTodo);
   } catch (error) {
     console.error(error);
   }
