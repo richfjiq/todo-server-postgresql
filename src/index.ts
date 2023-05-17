@@ -104,9 +104,36 @@ app.post('/todos/signup', async (req, res) => {
 
 app.post('/todos/login', async (req, res) => {
   const { email, password } = req.body;
+  console.log(email);
+  console.log(password);
 
   try {
+    const user = await pool.query('SELECT * FROM users WHERE email = $1', [
+      email,
+    ]);
+
+    if (!user.rows.length) {
+      res.status(403).json({ message: 'User does not exist.' });
+      return;
+    }
+
+    const success = await bcrypt.compare(
+      password,
+      user.rows[0].hashed_password
+    );
+
+    if (!success) {
+      res.status(404).json({ message: 'Invalid password.' });
+      return;
+    }
+
+    const token = jwt.sign({ email }, process.env.SECRET_JWT ?? '', {
+      expiresIn: '1d',
+    });
+
+    res.status(200).json({ email: user.rows[0].email, token });
   } catch (error) {
+    res.status(404).json({ message: 'Login failed.' });
     console.error(error);
   }
 });
